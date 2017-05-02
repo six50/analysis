@@ -66,7 +66,7 @@ ggsave("polls-600x300.png", plot=polls_600, width=6, height=3, dpi=100)
 for (f in c("polls-1200x600.png", "polls-600x300.png")) {
     system_command = paste(c(
         "aws s3api put-object --bucket sixfifty --key '", f, "' ",
-        "--body '", f, "' --acl 'public-read'"
+        "--body '", f, "' --acl 'public-read' --content-type 'image/png'"
         ), sep="", collapse="")
     system(system_command)
 }
