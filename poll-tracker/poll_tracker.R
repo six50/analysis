@@ -9,8 +9,8 @@ library(tidyr)
 party_names = list(
     "con" = "Conservative",
     "lab" = "Labour",
-    "lib" = "Liberal Democrat",
-    "green" = "Green",
+    "ld" = "Liberal Democrat",
+    "grn" = "Green",
     "ukip" = "UKIP"
 )
 
@@ -27,9 +27,9 @@ party_colours = c(
 polls = 'https://s3-eu-west-1.amazonaws.com/sixfifty/polls.csv' %>%
     read.csv() %>%
     # Coerce to datetime
-    mutate(sampled_to = parse_date_time(sampled_to, "d m y")) %>%
+    mutate(date = ymd(date)) %>%
     # Reshape from wide df into long df (party cols -> "party" and "pc" cols)
-    gather("party", "pc", 6:10) %>%
+    gather("party", "pc", 4:8) %>%
     # Add new col + multiply pc by 100
     mutate(party_long = factor(unlist(party_names)[party],
                             levels = c("Conservative",
@@ -41,24 +41,25 @@ polls = 'https://s3-eu-west-1.amazonaws.com/sixfifty/polls.csv' %>%
 
 # Visualise as scatterplot with LOESS smoothed averages
 polls_plot = polls %>%
-    filter(sampled_to >= ymd('2017-01-01')) %>%
-    ggplot(aes(x=sampled_to, y=pc, colour=party_long)) +
+    filter(date >= ymd('2017-01-01')) %>%
+    ggplot(aes(x=date, y=pc, colour=party_long)) +
         xlab("") + ylab("Percent")        
 
 # Save as 1200x600 png
 polls_1200 = polls_plot +
-        geom_point(size=7, alpha=0.15, pch=16) +
+        geom_point(size=6, alpha=0.22, pch=16) +
         scale_colour_manual("Party", values=party_colours) +
-        geom_smooth(method="loess", span=0.4, se=FALSE, size=2.1) +
-        theme(text = element_text(size=28, family="Open Sans"),
-              legend.key.height=unit(2.5,"line"))
+        geom_smooth(method="loess", span=0.4, se=FALSE, size=2.8) +
+        theme(text = element_text(size=26, family="Open Sans"),
+              legend.key.height=unit(2.8, "line"),
+              plot.margin = unit(c(1,1,1,1), "cm"))
 ggsave("polls-1200x600.png", plot=polls_1200, width=12, height=6, dpi=100)
 
 # Save as 600x300 png
 polls_600 = polls_plot +
-    geom_point(size=2, alpha=0.2, pch=16) +
+    geom_point(size=3, alpha=0.22, pch=16) +
     scale_colour_manual("Party", values=party_colours) +
-    geom_smooth(method="loess", span=0.4, se=FALSE, size=1.0) +
+    geom_smooth(method="loess", span=0.4, se=FALSE, size=1.5) +
     theme(text = element_text(size=12, family="Open Sans"))
 ggsave("polls-600x300.png", plot=polls_600, width=6, height=3, dpi=100)
 
