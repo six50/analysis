@@ -11,7 +11,8 @@ party_names = list(
     "lab" = "Labour",
     "ld" = "Liberal Democrat",
     "grn" = "Green",
-    "ukip" = "UKIP"
+    "ukip" = "UKIP",
+    "snp" = "SNP"
 )
 
 # Define party colours to use
@@ -20,51 +21,42 @@ party_colours = c(
     "#5EC500",  # green
     "#D20004",  # lab
     "#FEAA09",  # lib
-    "#5E0D78"  # ukip
+    "#5E0D78",  # ukip
+    "#FFFF00"  # snp
 )
 
 # Import & reshape data ready for plotting
 polls = 'https://s3-eu-west-1.amazonaws.com/sixfifty/polls.csv' %>%
     read.csv() %>%
     # Coerce to datetime
-    mutate(date = ymd(date)) %>%
+    mutate(to = ymd(to)) %>%
     # Reshape from wide df into long df (party cols -> "party" and "pc" cols)
-    gather("party", "pc", 4:8) %>%
+    gather("party", "pc", 7:12) %>%
     # Add new col + multiply pc by 100
     mutate(party_long = factor(unlist(party_names)[party],
                             levels = c("Conservative",
                                        "Green",
                                        "Labour",
                                        "Liberal Democrat",
-                                       "UKIP")),
+                                       "UKIP",
+                                       "SNP")),
            pc = pc * 100)
 
 # Visualise as scatterplot with LOESS smoothed averages
 polls_plot = polls %>%
-    filter(date >= ymd('2017-01-01')) %>%
-    ggplot(aes(x=date, y=pc, colour=party_long)) +
-        xlab("") + ylab("Percent")        
-
-# Save as 1200x600 png
-polls_1200 = polls_plot +
-        geom_point(size=6, alpha=0.22, pch=16) +
+    filter(to >= ymd('2017-01-01')) %>%
+    ggplot(aes(x=to, y=pc, colour=party_long)) +
+        xlab("") + ylab("Percent") +
+        geom_point(size=3, alpha=0.3, pch=16) +
         scale_colour_manual("Party", values=party_colours) +
-        geom_smooth(method="loess", span=0.4, se=FALSE, size=2.8) +
-        theme(text = element_text(size=26, family="Open Sans"),
+        geom_smooth(method="loess", span=0.4, se=FALSE, size=1) +
+        theme(text = element_text(size=18, family="Open Sans"),
               legend.key.height=unit(2.8, "line"),
-              plot.margin = unit(c(1,1,1,1), "cm"))
-ggsave("polls-1200x600.png", plot=polls_1200, width=12, height=6, dpi=100)
-
-# Save as 600x300 png
-polls_600 = polls_plot +
-    geom_point(size=3, alpha=0.22, pch=16) +
-    scale_colour_manual("Party", values=party_colours) +
-    geom_smooth(method="loess", span=0.4, se=FALSE, size=1.5) +
-    theme(text = element_text(size=12, family="Open Sans"))
-ggsave("polls-600x300.png", plot=polls_600, width=6, height=3, dpi=100)
+              plot.margin = unit(c(0,0,0,0), "cm"))
+ggsave("polls-1200x600.png", plot=polls_plot, width=12, height=6, dpi=100)
 
 # Upload to S3
-for (f in c("polls-1200x600.png", "polls-600x300.png")) {
+for (f in c("polls-1200x600.png")) {
     system_command = paste(c(
         "aws s3api put-object --bucket sixfifty --key '", f, "' ",
         "--body '", f, "' --acl 'public-read' --content-type 'image/png'"
