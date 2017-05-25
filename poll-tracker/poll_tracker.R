@@ -163,9 +163,9 @@ polls_ni = import_data(
 polls_plot = polls %>%
     filter(to >= ymd('2017-01-01')) %>%
     ggplot(aes(x=to, y=pc, colour=party_long, weight=sample_size)) +
-        xlab("") + ylab("Percent") +
+        xlab("") + ylab("Voting Intention") +
         geom_point(size=3, alpha=0.3, pch=16) +
-        scale_colour_manual("Voting Intention", values=party_colours_uk) +
+        scale_colour_manual("Party", values=party_colours_uk) +
         geom_smooth(method="loess", span=0.4, se=FALSE, size=1.2) +
         theme(text = element_text(size=18, family="Open Sans"),
               legend.key.height=unit(2.8, "line"),
